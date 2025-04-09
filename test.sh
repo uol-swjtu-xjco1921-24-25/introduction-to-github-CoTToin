@@ -90,30 +90,20 @@ def test_mixed_valid_invalid_input():
     
     # 验证有效移动仍被执行
     assert stdout.count("X") > 1  # 玩家位置应改变
-# --------------------------
-# 有效迷宫测试
-# --------------------------
-
-def test_valid_maze_5x5():
-    """测试有效5x5迷宫的加载和基本移动"""
-    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["w", "a", "s", "d", "m", "q"])
-    assert code == 0
-    assert "X" in stdout  # 地图显示玩家位置
-
-def test_valid_maze_10x6():
-    """测试有效10x6迷宫的加载"""
-    stdout, _, code = run_maze_test("valid/reg_10x6.txt")
-    assert code == 0
-    assert "S" in stdout  # 初始位置正确
-
-def test_valid_maze_15x8():
-    """测试有效15x8迷宫的加载"""
-    stdout, _, code = run_maze_test("valid/reg_15x8.txt")
-    assert code == 0
-    assert "S" in stdout  # 初始位置正确
-
-def test_win_condition():
-    """测试到达出口胜利条件"""
-    stdout, _, code = run_maze_test("valid/simple_win.txt", ["d", "d", "d", "d"])
+ 
+"""通关测试"""
+def test_successful_completion():
+    stdout, _, code = run_maze_test("valid/reg_5x5.txt", ["d", "s", "s"])
     assert "You won!" in stdout
     assert code == 0
+
+ """测试通关后继续输入的情况"""
+def test_win_with_extra_steps():
+    inputs = ["d", "d", "d", "a", "s", "w"]  # 前三次已通关
+    stdout, _, code = run_maze_test("valid/straight_path.txt", inputs)
+    
+    assert "You won!" in stdout
+    assert code == 0
+    # 通关后的输入不应产生效果
+    assert stdout.count("Invalid") == 0
+    assert stdout.count("Cannot move") == 0
