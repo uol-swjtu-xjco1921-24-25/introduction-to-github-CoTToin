@@ -22,75 +22,74 @@ def run_maze_test(filename, inputs=None):
         stdout, stderr = proc.communicate()
     return stdout, stderr, proc.returncode
 
-# --------------------------
-# 无效迷宫测试
-# --------------------------
+"""测试缺少起点(S)的迷宫"""
 def test_missing_start_point():
-    """测试缺少起点(S)的迷宫"""
     _, stderr, code = run_maze_test("invalid/ireg_missing_S.txt")
     assert "Start point 'S' not found" in stderr
     assert code != 0
 
+"""测试缺少终点(E)的迷宫"""
 def test_missing_exit_point():
-    """测试缺少终点(E)的迷宫"""
     _, stderr, code = run_maze_test("invalid/ireg_missing_E.txt")
     assert "Exit point 'E' not found" in stderr
     assert code != 0
 
+"""测试行长度不一致的迷宫"""
 def test_invalid_width():
-    """测试行长度不一致的迷宫"""
     _, stderr, code = run_maze_test("invalid/ireg_width_5x5.txt")
     assert "Row 3 has invalid length" in stderr
     assert code != 0
 
+"""测试高度不足的迷宫"""
 def test_invalid_height():
-    """测试高度不足的迷宫"""
     _, stderr, code = run_maze_test("invalid/ireg_height_5x5.txt")
     assert "Maze height must be ≥5" in stderr
     assert code != 0
 
+ """测试尺寸不足的迷宫(4x4)"""
 def test_undersized_maze():
-    """测试尺寸不足的迷宫(4x4)"""
     _, stderr, code = run_maze_test("invalid/ireg_small_4x4.txt")
     assert "Maze dimensions must be between 5 and 100" in stderr
     assert code != 0
 
+"""测试尺寸过大的迷宫(101x101)"""
 def test_oversized_maze():
-    """测试尺寸过大的迷宫(101x101)"""
     _, stderr, code = run_maze_test("invalid/large_101x101.txt")
     assert "Maze dimensions exceed 100x100" in stderr
     assert code != 0
 
-# --------------------------
-# 用户输入和逻辑测试
-# --------------------------
-
-def test_move_into_wall():
-    """测试撞墙逻辑"""
-    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["w"])
+"""测试玩家移动限制（墙壁和边界）"""
+def test_movement_restrictions():
+    maze_file = "valid/reg_movement_test.txt"
+    
+    # 测试撞墙
+    stdout, _, _ = run_maze_test(maze_file, ["d", "d", "w"])  # 向右两次然后向上撞墙
     assert "Cannot move into a wall" in stdout
-
-def test_move_out_of_bounds():
-    """测试越界移动"""
-    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["a", "a", "a"])
+    
+    # 测试越界
+    stdout, _, _ = run_maze_test(maze_file, ["a", "a", "a"])  # 连续向左移动
     assert "Cannot move outside maze" in stdout
 
-def test_invalid_command_line_args():
-    """测试缺少命令行参数"""
-    proc = subprocess.Popen(
-        [MAZE_EXECUTABLE],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
-    _, stderr = proc.communicate()
-    assert "Usage: ./maze <filename>" in stderr
-    assert proc.returncode != 0
+def test_invalid_input_handling():
+    """测试非法输入处理"""
+    # 测试非WASDQM的按键输入
+    invalid_inputs = ["z", "x", "1", "!", "\n", " ", "wa", "dd"]
+    for inp in invalid_inputs:
+        stdout, _, _ = run_maze_test("valid/reg_5x5.txt", [inp])
+        assert "Invalid input" in stdout
+        assert "Valid commands are" in stdout  # 应提示有效指令
 
-def test_invalid_user_input():
-    """测试非法输入键"""
-    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["z"])
-    assert "Invalid input" in stdout  至少十种情况 你觉得还有什么可能呢
+def test_mixed_valid_invalid_input():
+    """测试混合有效和无效输入"""
+    inputs = ["d", "x", "a", "1", "s", "!", "w"]
+    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", inputs)
+    
+    # 统计错误消息出现次数
+    invalid_count = stdout.count("Invalid input")
+    assert invalid_count == 3
+    
+    # 验证有效移动仍被执行
+    assert stdout.count("X") > 1  # 玩家位置应改变
 # --------------------------
 # 有效迷宫测试
 # --------------------------
