@@ -1,72 +1,120 @@
-import os
+import pytest
 import subprocess
-import random
-
+import os
 
 MAZE_EXECUTABLE = "./maze"
 TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), "test_data")
 
-
-def is_valid_file(file_path):
-    """
-    检查迷宫文件是否有效
-    :param file_path: 迷宫文件路径
-    :return: 有效返回True，无效返回False
-    """
-    if not os.path.exists(file_path):
-        return False
-    file_extension = os.path.splitext(file_path)[1]
-    if file_extension != '.txt':
-        return False
-
-    start_count = 0
-    end_count = 0
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
-        height = len(lines)
-        if height < 5 or height > 100:
-            return False
-        width = len(lines[0].strip())
-        if width < 5 or width > 100:
-            return False
-
-        for line in lines:
-            start_count += line.count('S')
-            end_count += line.count('E')
-            for char in line:
-                if char not in ['S', 'E', '#', ' ']:
-                    return False
-    if start_count != 1 or end_count != 1:
-        return False
-    return True
-
 def run_maze_test(filename, inputs=None):
-    """
-    运行迷宫程序并捕获其输出和退出状态码
-    :param filename: 迷宫测试文件的名称
-    :param inputs: 可选参数，传入迷宫程序的输入指令列表
-    :return: 一个元组，包含程序的标准输出、标准错误输出和退出状态码
-    """
+    """运行迷宫程序并捕获输出和退出码"""
     cmd = [MAZE_EXECUTABLE, os.path.join(TEST_DATA_DIR, filename)]
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-
+    proc = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
     if inputs:
-            input_str = "\n".join(inputs) + "\n"
-            stdout, stderr = proc.communicate(input_str)
-        else:
-            stdout, stderr = proc.communicate(
-            return_code = proc.returncode
-        return stdout, stderr, return_code
-    except FileNotFoundError:
-        print(f"错误: 未找到迷宫可执行文件 {MAZE_EXECUTABLE}")
-        return "", f"错误: 未找到迷宫可执行文件 {MAZE_EXECUTABLE}", 1
-    except Exception as e:
-        print(f"运行迷宫程序时发生未知错误: {e}")
-        return "", f"运行迷宫程序时发生未知错误: {e}", 1
+        input_str = "\n".join(inputs) + "\n"
+        stdout, stderr = proc.communicate(input_str)
+    else:
+        stdout, stderr = proc.communicate()
+    return stdout, stderr, proc.returncode
+
+# --------------------------
+# 无效迷宫测试
+# --------------------------
+def test_missing_start_point():
+    """测试缺少起点(S)的迷宫"""
+    _, stderr, code = run_maze_test("invalid/ireg_missing_S.txt")
+    assert "Start point 'S' not found" in stderr
+    assert code != 0
+
+def test_missing_exit_point():
+    """测试缺少终点(E)的迷宫"""
+    _, stderr, code = run_maze_test("invalid/ireg_missing_E.txt")
+    assert "Exit point 'E' not found" in stderr
+    assert code != 0
+
+def test_invalid_width():
+    """测试行长度不一致的迷宫"""
+    _, stderr, code = run_maze_test("invalid/ireg_width_5x5.txt")
+    assert "Row 3 has invalid length" in stderr
+    assert code != 0
+
+def test_invalid_height():
+    """测试高度不足的迷宫"""
+    _, stderr, code = run_maze_test("invalid/ireg_height_5x5.txt")
+    assert "Maze height must be ≥5" in stderr
+    assert code != 0
+
+def test_undersized_maze():
+    """测试尺寸不足的迷宫(4x4)"""
+    _, stderr, code = run_maze_test("invalid/ireg_small_4x4.txt")
+    assert "Maze dimensions must be between 5 and 100" in stderr
+    assert code != 0
+
+def test_oversized_maze():
+    """测试尺寸过大的迷宫(101x101)"""
+    _, stderr, code = run_maze_test("invalid/large_101x101.txt")
+    assert "Maze dimensions exceed 100x100" in stderr
+    assert code != 0
+
+# --------------------------
+# 用户输入和逻辑测试
+# --------------------------
+
+def test_move_into_wall():
+    """测试撞墙逻辑"""
+    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["w"])
+    assert "Cannot move into a wall" in stdout
+
+def test_move_out_of_bounds():
+    """测试越界移动"""
+    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["a", "a", "a"])
+    assert "Cannot move outside maze" in stdout
+
+def test_invalid_command_line_args():
+    """测试缺少命令行参数"""
+    proc = subprocess.Popen(
+        [MAZE_EXECUTABLE],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    _, stderr = proc.communicate()
+    assert "Usage: ./maze <filename>" in stderr
+    assert proc.returncode != 0
+
+def test_invalid_user_input():
+    """测试非法输入键"""
+    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["z"])
+    assert "Invalid input" in stdout  至少十种情况 你觉得还有什么可能呢
+# --------------------------
+# 有效迷宫测试
+# --------------------------
+
+def test_valid_maze_5x5():
+    """测试有效5x5迷宫的加载和基本移动"""
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["w", "a", "s", "d", "m", "q"])
+    assert code == 0
+    assert "X" in stdout  # 地图显示玩家位置
+
+def test_valid_maze_10x6():
+    """测试有效10x6迷宫的加载"""
+    stdout, _, code = run_maze_test("valid/reg_10x6.txt")
+    assert code == 0
+    assert "S" in stdout  # 初始位置正确
+
+def test_valid_maze_15x8():
+    """测试有效15x8迷宫的加载"""
+    stdout, _, code = run_maze_test("valid/reg_15x8.txt")
+    assert code == 0
+    assert "S" in stdout  # 初始位置正确
+
+def test_win_condition():
+    """测试到达出口胜利条件"""
+    stdout, _, code = run_maze_test("valid/simple_win.txt", ["d", "d", "d", "d"])
+    assert "You won!" in stdout
+    assert code == 0
