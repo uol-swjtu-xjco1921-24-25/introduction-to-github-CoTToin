@@ -29,7 +29,6 @@ def test_load_valid_maze():
     assert "Player starts at position" in stdout
     assert stderr == ""
 
-
 """合法移动（WASD）"""
 def test_valid_movement():
     stdout, stderr = run_maze("reg_5x5.txt", ["D"])
@@ -53,6 +52,12 @@ def test_quit_command():
     stdout, stderr = run_maze("reg_5x5.txt", ["Q"])
     assert "Game exited" in stdout or stdout == ""
     assert stderr == ""
+
+"""加载不存在的文件"""
+def test_load_nonexistent_file():
+    stdout, stderr, returncode = run_maze_test("nonexistent.txt")
+    assert "Error: File not found" in stderr
+    assert returncode != 0
 
 """测试缺少起点(S)的迷宫"""
 def test_missing_start_point():
@@ -90,16 +95,14 @@ def test_oversized_maze():
     assert "Maze dimensions exceed 100x100" in stderr
     assert code != 0
 
-"""测试玩家移动限制（墙壁和边界）"""
-def test_movement_restrictions():
-    maze_file = "valid/reg_movement_test.txt"
-    
-    # 测试撞墙
-    stdout, _, _ = run_maze_test(maze_file, ["d", "d", "w"])  # 向右两次然后向上撞墙
+"""测试玩家移动撞墙"""
+def test_move_into_wall():
+    stdout, _, _ = run_maze_test("reg_10x6.txt", ["d", "d", "w"]) 
     assert "Cannot move into a wall" in stdout
-    
-    # 测试越界
-    stdout, _, _ = run_maze_test(maze_file, ["a", "a", "a"])  # 连续向左移动
+
+"""测试玩家移动越界"""
+def test_move_out_of_bounds():
+    stdout, _, _ = run_maze_test("reg_15x8.txt", ["d", "d", "d", "d" , "w"])  
     assert "Cannot move outside maze" in stdout
 
 def test_invalid_input_handling():
@@ -111,31 +114,22 @@ def test_invalid_input_handling():
         assert "Invalid input" in stdout
         assert "Valid commands are" in stdout  # 应提示有效指令
 
+ """测试混合有效和无效输入"""
 def test_mixed_valid_invalid_input():
-    """测试混合有效和无效输入"""
     inputs = ["d", "x", "a", "1", "s", "!", "w"]
     stdout, _, _ = run_maze_test("valid/reg_5x5.txt", inputs)
     
-    # 统计错误消息出现次数
     invalid_count = stdout.count("Invalid input")
     assert invalid_count == 3
     
-    # 验证有效移动仍被执行
-    assert stdout.count("X") > 1  # 玩家位置应改变
- 
-"""通关测试"""
-def test_successful_completion():
-    stdout, _, code = run_maze_test("valid/reg_5x5.txt", ["d", "s", "s"])
-    assert "You won!" in stdout
-    assert code == 0
+    assert stdout.count("X") > 1  
 
  """测试通关后继续输入的情况"""
 def test_win_with_extra_steps():
-    inputs = ["d", "d", "d", "a", "s", "w"]  # 前三次已通关
+    inputs = ["d", "d", "d", "a", "s", "w"]  
     stdout, _, code = run_maze_test("valid/straight_path.txt", inputs)
     
     assert "You won!" in stdout
     assert code == 0
-    # 通关后的输入不应产生效果
     assert stdout.count("Invalid") == 0
     assert stdout.count("Cannot move") == 0
