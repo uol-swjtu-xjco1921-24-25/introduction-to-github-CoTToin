@@ -22,6 +22,39 @@ def run_maze_test(filename, inputs=None):
         stdout, stderr = proc.communicate()
     return stdout, stderr, proc.returncode
 
+
+"""加载有效的迷宫文件"""
+def test_load_valid_maze():
+    stdout, stderr = run_maze_test("reg_5x5.txt")
+    assert "Player starts at position" in stdout
+    assert stderr == ""
+
+
+"""合法移动（WASD）"""
+def test_valid_movement():
+    # 输入向右移动（D）
+    stdout, stderr = run_maze("reg_5x5.txt", "D\n")
+    assert "Player moved to" in stdout
+    assert stderr == ""
+
+"""显示地图（M/m）"""
+def test_show_map():
+    stdout, stderr = run_maze("reg_5x5.txt", "M\n")
+    assert "X marks current position" in stdout
+    assert stderr == ""
+
+"""到达出口(E)"""
+def test_reach_exit():
+    stdout, stderr = run_maze("reg_movement_test.txt", "D\nD\n")
+    assert "Congratulations! You escaped the maze!" in stdout
+    assert stderr == ""
+
+"""输入退出命令（Q/q）"""
+def test_quit_command():
+    stdout, stderr = run_maze("reg_5x5.txt", "Q\n")
+    assert "Game exited" in stdout or stdout == ""
+    assert stderr == ""
+
 """测试缺少起点(S)的迷宫"""
 def test_missing_start_point():
     _, stderr, code = run_maze_test("invalid/ireg_missing_S.txt")
@@ -40,7 +73,7 @@ def test_invalid_width():
     assert "Row 3 has invalid length" in stderr
     assert code != 0
 
-"""测试高度不足的迷宫"""
+"""测试宽长度不一致的迷宫"""
 def test_invalid_height():
     _, stderr, code = run_maze_test("invalid/ireg_height_5x5.txt")
     assert "Maze height must be ≥5" in stderr
