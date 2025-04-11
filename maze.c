@@ -2,16 +2,16 @@
  * Maze Game Skeleton Code
  * Module: XJCO1921
  * Student: Chengyi Yang
- * 
- * References:
- * - Maze structure design inspired by Lecture 3 slides
- * - Input handling referenced from lab exercise 2
  */
 
  #include <stdio.h>
  #include <stdlib.h>
  #include <stdbool.h>
  
+// Constant definitions
+#define MIN_MAZE_SIZE 5
+#define MAX_MAZE_SIZE 100
+
  // 1. Struct Definitions
  /**
   * 2D position in the maze grid
@@ -33,9 +33,10 @@
      Position start;   // Location of 'S'
      Position exit;    // Location of 'E'
      Position player;  // Current player position
+     bool map_shown;   // Map display status flag
  } Maze;
  
- // 2. Function Prototypes (评分标准：Modular breakdown)
+ // 2. Function Prototypes
  /* File Operations Group */
  Maze* load_maze(const char* filename);  // Reads maze file, validates structure
  void free_maze(Maze* maze);             // Releases all allocated memory
@@ -47,10 +48,22 @@
  
  /* UI Group */
  void display_maze(const Maze* maze);     // Shows map with 'X' marker
+ /**
+ * Input Validation Design:
+ * 1. Allowed inputs: 
+ *    - Movement: W/w (up), A/a (left), S/s (down), D/d (right)
+ *    - Commands: M/m (map), Q/q (quit)
+ * 2. Validation method:
+ *    - Use strchr("WASDMQ", toupper(input)) for checking
+ *    - Loop until valid input received
+ * 3. User feedback:
+ *    - Print "Invalid input! Use WASD/M/Q" on error
+ *    - Show command list when waiting for input
+ */
  char get_user_input(void);               // Validates WASD/M/Q inputs
  void show_message(const char* text);     // Unified message output
  
- // 3. Main Function Outline (评分标准：Basic structuring)
+ // 3. Main Function Outline 
  int main(int argc, char* argv[]) {
      // Phase 1: Initialization
      if (argc != 2) {
@@ -72,6 +85,7 @@
          switch (input) {
              case 'M':  // Map display
                  display_maze(maze);
+                 maze->map_shown = true; // Set map displayed flag
                  break;
                  
              case 'Q':  // Quit
@@ -84,6 +98,7 @@
                      show_message("Congratulations! You escaped!");
                      is_running = false;
                  }
+                 maze->map_shown = false; // Reset map display status after moving
          }
      }
  
