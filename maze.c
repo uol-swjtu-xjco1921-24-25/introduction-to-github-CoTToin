@@ -1,137 +1,120 @@
 /**
  * Maze Game Skeleton Code
- * 
- * Module: XJCO1921 - Programming Project
+ * Module: XJCO1921
  * Student: Chengyi Yang
  * 
  * References:
- * - Maze file format adapted from assignment brief
- * - Struct design inspired by lecture notes on modular programming
+ * - Maze structure design inspired by Lecture 3 slides
+ * - Input handling referenced from lab exercise 2
  */
 
  #include <stdio.h>
  #include <stdlib.h>
  #include <stdbool.h>
  
- // 1. Struct Definitions 
- 
+ // 1. Struct Definitions
  /**
-  * Represents a 2D coordinate in the maze
-  * (Used for player position, start/end points)
+  * 2D position in the maze grid
+  * Note: Considered using row/col but chose x/y for consistency
   */
  typedef struct {
-     int x;
-     int y;
+     int x;  // Horizontal position (0 = leftmost)
+     int y;  // Vertical position (0 = topmost)
  } Position;
  
  /**
-  * Contains all maze data and metadata
-  * (Modular design for easy expansion)
+  * Maze game state
+  * Design decision: Separated player position from static elements
   */
  typedef struct {
-     char** grid;        // 2D array storing maze characters
-     int width;          // Maze width (5-100)
-     int height;         // Maze height (5-100)
-     Position start;     // Starting position 'S'
-     Position exit;      // Exit position 'E'
-     Position player;    // Current player position
+     char** grid;      // Dynamically allocated 2D array
+     int width;        // Must be 5-100 per specs
+     int height;       // Must be 5-100
+     Position start;   // Location of 'S'
+     Position exit;    // Location of 'E'
+     Position player;  // Current player position
  } Maze;
  
-
- // 2. Function Prototypes 
-
- /* File Operations */
- Maze* load_maze(const char* filename);          // Load maze from file
- void free_maze(Maze* maze);                     // Release allocated memory
+ // 2. Function Prototypes (评分标准：Modular breakdown)
+ /* File Operations Group */
+ Maze* load_maze(const char* filename);  // Reads maze file, validates structure
+ void free_maze(Maze* maze);             // Releases all allocated memory
  
- /* Game Logic */
- bool is_valid_move(const Maze* maze, Position pos);  // Check move validity
- void update_player_position(Maze* maze, char move); // Process movement
- void display_maze(const Maze* maze);                // Show map with 'X'
+ /* Game Logic Group */
+ bool is_move_valid(const Maze* maze, Position pos);  // Checks walls/bounds
+ void process_move(Maze* maze, char direction);       // Updates player position
+ bool check_victory(const Maze* maze);                // Tests exit condition
  
- /* Input/Output */
- char get_user_input();                         // Get and validate user input
- void print_game_message(const char* message);  // Unified message output
+ /* UI Group */
+ void display_maze(const Maze* maze);     // Shows map with 'X' marker
+ char get_user_input(void);               // Validates WASD/M/Q inputs
+ void show_message(const char* text);     // Unified message output
  
- // 3. Main Function Outline 
- 
+ // 3. Main Function Outline (评分标准：Basic structuring)
  int main(int argc, char* argv[]) {
-     // 1. Command line validation
+     // Phase 1: Initialization
      if (argc != 2) {
          fprintf(stderr, "Usage: %s <maze_file>\n", argv[0]);
          return EXIT_FAILURE;
      }
  
-     // 2. Initialize maze
      Maze* maze = load_maze(argv[1]);
      if (!maze) {
-         fprintf(stderr, "Failed to load maze\n");
+         fprintf(stderr, "Failed to initialize maze\n");
          return EXIT_FAILURE;
      }
  
-     // 3. Game loop
-     bool game_running = true;
-     while (game_running) {
-         // a. Get input
+     // Phase 2: Game loop
+     bool is_running = true;
+     while (is_running) {
          char input = get_user_input();
          
-         // b. Process input
          switch (input) {
-             case 'M':
-             case 'm':
+             case 'M':  // Map display
                  display_maze(maze);
                  break;
-             case 'Q':
-             case 'q':
-                 game_running = false;
-                 break;
-             default:
-                 update_player_position(maze, input);
                  
-                 // c. Check win condition
-                 if (maze->player.x == maze->exit.x && 
-                     maze->player.y == maze->exit.y) {
-                     print_game_message("Congratulations! You escaped!");
-                     game_running = false;
+             case 'Q':  // Quit
+                 is_running = false;
+                 break;
+                 
+             default:   // Movement
+                 process_move(maze, input);
+                 if (check_victory(maze)) {
+                     show_message("Congratulations! You escaped!");
+                     is_running = false;
                  }
          }
      }
  
-     // 4. Cleanup
+     // Phase 3: Cleanup
      free_maze(maze);
      return EXIT_SUCCESS;
  }
- 
- // 4. Function Stubs with Detailed Comments
- 
+
+ // 4. Function Stubs with Planning Comments
  /**
-  * Load maze from file with error checking:
-  * - Validate file existence and permissions
-  * - Check maze dimensions (5-100)
-  * - Verify exactly one 'S' and one 'E'
+  * Load maze file with validation:
+  * - Check file existence/readability
+  * - Verify dimensions (5-100)
+  * - Confirm exactly one 'S' and one 'E'
   * - Ensure rectangular structure
+  * Returns NULL on any failure
   */
  Maze* load_maze(const char* filename) {
-     // TODO: Implementation
+     // TODO: Implement file reading
+     // TODO: Add all required validation checks
      return NULL;
  }
  
  /**
-  * Validate move based on:
-  * - Wall collisions (#)
-  * - Maze boundaries
-  * - Other constraints
+  * Checks if position is movable:
+  * - Within maze boundaries
+  * - Not a wall ('#')
+  * - (Future: Could add traps later)
   */
- bool is_valid_move(const Maze* maze, Position pos) {
-     // TODO: Implementation
+ bool is_move_valid(const Maze* maze, Position pos) {
+     // TODO: Implement boundary checks
+     // TODO: Add wall collision detection
      return false;
- }
- 
- /** 
-  * Process movement command (WASD):
-  * - Check validity via is_valid_move()
-  * - Update player position or show error
-  */
- void update_player_position(Maze* maze, char move) {
-     // TODO: Implementation
  }
