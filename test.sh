@@ -22,7 +22,6 @@ def run_maze_test(filename, inputs=None):
         stdout, stderr = proc.communicate()
     return stdout, stderr, proc.returncode
 
-
 """TEST1:加载有效的迷宫文件"""
 def test_load_valid_maze():
     stdout, stderr = run_maze_test("valid/reg_5x5.txt")
@@ -83,63 +82,96 @@ def test_invalid_height():
     assert "Maze height must be ≥5" in stderr
     assert code != 0
 
-"""TEST10:测试尺寸不足的迷宫(4x4)"""
+"""TEST11:测试尺寸不足的迷宫(4x4)"""
 def test_undersized_maze():
     _, stderr, code = run_maze_test("invalid/ireg_small_4x4.txt")
     assert "Maze dimensions must be between 5 and 100" in stderr
     assert code != 0
 
-"""TEST11:测试尺寸过大的迷宫(101x101)"""
+"""TEST12:测试尺寸过大的迷宫(101x101)"""
 def test_oversized_maze():
     _, stderr, code = run_maze_test("invalid/large_101x101.txt")
     assert "Maze dimensions exceed 100x100" in stderr
     assert code != 0
 
-"""TEST12:迷宫包含非法字符"""
+"""TEST13:迷宫包含非法字符"""
 def test_invalid_maze_characters():
     stdout, stderr, code = run_maze_test("invalid/ireg_char.txt")
     assert "Error: Invalid character in maze" in stderr
     assert code != 0
 
-"""TEST13:传入目录路径而非文件"""
+"""TEST14:传入目录路径而非文件"""
 def test_load_directory_instead_of_file():
     stdout, stderr, returncode = run_maze_test(TEST_DATA_DIR)
     assert "Error: Not a file" in stderr
     assert returncode != 0
 
-"""TEST14:迷宫含多个起点"""
+"""TEST15:迷宫含多个起点"""
 def test_multiple_start_points():
     stdout, stderr, returncode = run_maze_test("invalid/ireg_multi_S.txt")
     assert "Error: Multiple start points" in stderr
     assert returncode != 0
 
-"""TEST15:迷宫包含多个终点"""
+"""TEST16:迷宫包含多个终点"""
 def test_multiple_exit_points():
     stdout, stderr, returncode = run_maze_test("invalid/ireg_multi_E.txt")
     assert "Error: Multiple exit points" in stderr 
     assert returncode != 0                        
 
-"""TEST16:起点被墙壁包围"""
+"""TEST17:起点被墙壁包围"""
 def test_trapped_start():
     stdout, stderr, _ = run_maze_test("invalid/ireg_trapped.txt", ["D", "W", "A", "S"])
     assert "No valid moves" in stdout
 
-"""TEST17:测试玩家移动撞墙"""
+"""TEST18:测试玩家移动撞墙"""
 def test_move_into_wall():
     stdout, _, _ = run_maze_test("valid/reg_10x6.txt", ["d", "d", "w"]) 
     assert "Cannot move into a wall" in stdout
 
-"""TEST18:测试玩家移动越界"""
+"""TEST19:测试玩家移动越界"""
 def test_move_out_of_bounds():
     stdout, _, _ = run_maze_test("valid/reg_15x8.txt", ["d", "d", "d", "d" , "w"])  
     assert "Cannot move outside maze" in stdout
 
-"""TEST19:输入空行"""
+"""TEST20:输入空行"""
 def test_empty_input():
     stdout, stderr, _ = run_maze_test("valid/reg_5x5.txt", [""])
     assert "Invalid input" in stdout
 
-"""TEST20:输入超长字符串"""
+"""TEST21:输入超长字符串"""
 def test_long_input_string():
     stdout, stderr, _ = run_maze_test("valid/reg_5x5.txt", ["D"*1000])
     assert "Invalid input" in stdout
+
+"""TEST22:混合大小写输入测试"""
+def test_mixed_case_commands():
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["W", "a", "S", "d", "m", "Q"])
+    assert "Player moved up" in stdout
+    assert "Player moved left" in stdout
+    assert "Player moved down" in stdout
+    assert "Player moved right" in stdout
+    assert "Map displayed" in stdout
+    assert code == 0
+
+"""TEST23:连续无效输入测试"""
+def test_multiple_invalid_inputs():
+    inputs = ["X", "Z", "123", "", " ", "DD", "W A"]
+    stdout, stderr, _ = run_maze_test("valid/reg_5x5.txt", inputs)
+    assert stdout.count("Invalid input") == len(inputs)
+
+"""TEST24:胜利后继续输入"""
+def test_commands_after_win():
+    inputs = ["D", "D", "S", "W", "A"] 
+    stdout, stderr, code = run_maze_test("valid/quick_win.txt", inputs)
+    assert "Congratulations" in stdout
+    assert "Player moved" not in stdout[-100:] 
+
+"""TEST25:混合有效/无效移动序列"""
+def test_mixed_movement_sequence():
+    inputs = ["D", "W", "invalid", "S", "123", "A", "X", "D"]
+    stdout, stderr, _ = run_maze_test("valid/reg_10x6.txt", inputs)
+    valid_moves = ["right", "down", "left"]
+    for move in valid_moves:
+        assert f"Player moved {move}" in stdout
+    assert stdout.count("Invalid input") == 3
+    assert "Cannot move into wall" in stdout
