@@ -39,33 +39,37 @@ ERROR_CODE_INVALID_ARGS = 13
 
 """TEST1: Load a valid maze file """
 def test_load_valid_maze():
-    stdout, stderr = run_maze_test("valid/reg_5x5.txt")
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt")
     assert "Player starts at position" in stdout
-    assert stderr == 0""
+    assert stderr == ""
+    assert code == 0
 
 """TEST2: Legal Movement (WASD)"""
 def test_valid_movement():
-    stdout, stderr = run_maze_test("valid/reg_5x5.txt", ["D"])
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["D"])
     assert "Player moved to" in stdout
-    assert stderr == 0""
+    assert stderr == ""
+    assert code == 0
 
 """TEST3: Display map (M/m)"""
 def test_show_map():
-    stdout, stderr = run_maze_test("valid/reg_5x5.txt", ["M"])
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["M"])
     assert "X marks current position" in stdout
-    assert stderr == 0""
+    assert stderr == ""
+    assert code == 0
 
 """TEST4: Reaching the Exit (E)"""
 def test_reach_exit():
-    stdout, stderr = run_maze_test("valid/reg_movement_test.txt", ["D","D"])
+    stdout, stderr, code = run_maze_test("valid/reg_movement_test.txt", ["D","D"])
     assert "Congratulations! You escaped!" in stdout
-    assert stderr == 0""
+    assert stderr == ""
+    assert code == 0
 
 """TEST5: Enter the exit command (Q/q)"""
 def test_quit_command():
-    stdout, stderr = run_maze_test("valid/reg_5x5.txt", ["Q"])
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["Q"])
     assert "Game exited" in stdout or stdout == ""
-    assert stderr == 0""
+    assert stderr == ""
 
 """TEST6:Boundary legal dimension test(5x5)"""
 def test_min_size_maze():
@@ -104,7 +108,7 @@ def test_missing_start_point():
 def test_missing_exit_point():
     _, stderr, code = run_maze_test("invalid/ireg_missing_E.txt")
     assert "Exit point 'E' not found" in stderr
-    assert code == ERROR_CODE_MISSING_START_POINT
+    assert code == ERROR_CODE_MISSING_EXIT_POINT
 
 """TEST12: Tests mazes with inconsistent lines"""
 def test_invalid_width():
@@ -156,7 +160,7 @@ def test_multiple_exit_points():
 
 """TEST20:Empty File"""
 def test_empty_maze_file():
-    _, stderr, code = run_maze_test("invalid/irg_empty.txt")
+    _, stderr, code = run_maze_test("invalid/ireg_empty.txt")
     assert "Error: Empty maze file" in stderr
     assert code == ERROR_CODE_EMPTY_MAZE_FILE
 
@@ -212,9 +216,9 @@ def test_mixed_movement_sequence():
     stdout, stderr, _ = run_maze_test("valid/reg_10x6.txt", inputs)
     valid_moves = ["right", "down", "left"]
     for move in valid_moves:
-    assert f"Player moved {move}" in stdout
-    assert stdout.count("Invalid input") == 3
-    assert "Cannot move into wall" in stdout
+        assert f"Player moved {move}" in stdout
+        assert stdout.count("Invalid input") == 3
+        assert "Cannot move into wall" in stdout
 
 """TEST30:Test the uppercase command (M) separately"""
 def test_uppercase_map_command():
