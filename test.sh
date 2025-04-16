@@ -126,7 +126,7 @@ def test_trapped_start():
 """TEST18: Test the player moving into a wall"""
 def test_move_into_wall():
     stdout, _, _ = run_maze_test("valid/reg_10x6.txt", ["d", "d", "w"]) 
-    assert "Cannot move into a wall" in stdout
+    assert "Invalid move!" in stdout  
 
 """TEST19: Test Player moves out of bounds"""
 def test_move_out_of_bounds():
@@ -185,3 +185,39 @@ def test_uppercase_map_command():
 def test_lowercase_map_command():
     stdout, stderr = run_maze_test("valid/reg_5x5.txt", ["m"])
     assert "X marks" in stdout
+
+"""TEST28:Test parameterless"""
+def test_invalid_command_line_args():
+    cmd = [MAZE_EXECUTABLE]
+    proc = subprocess.Popen(...)
+    ...
+    assert "Usage:" in stderr
+    assert code != 0
+
+"""TEST29:Boundary legal dimension test(5x5)"""
+def test_min_size_maze():
+    stdout, stderr, code = run_maze_test("valid/min_5x5.txt")
+    assert "Player starts" in stdout
+    assert code == 0
+
+"""TEST30:Boundary legal dimension test(100x100)"""
+def test_min_size_maze():
+    stdout, stderr, code = run_maze_test("valid/max_100x100.txt")
+    assert "Player starts" in stdout
+    assert code == 0
+
+"""TEST31:Multicharacter input"""
+def test_multichar_input():
+    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["DD", "W A"])
+    assert "Invalid input" in stdout 
+
+"""TEST32:Special character"""
+def test_special_char_input():
+    stdout, _, _ = run_maze_test("valid/reg_5x5.txt", ["!", "@", "#"])
+    assert "Invalid input" in stdout  
+
+"""TEST33:Empty File"""
+def test_empty_maze_file():
+    _, stderr, code = run_maze_test("invalid/empty.txt")
+    assert "Error: Empty maze file" in stderr
+    assert code != 0
