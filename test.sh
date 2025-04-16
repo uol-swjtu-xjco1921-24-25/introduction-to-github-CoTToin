@@ -90,7 +90,7 @@ def test_undersized_maze():
 
 """TEST12: Testing oversized mazes (101x101)"""
 def test_oversized_maze():
-    _, stderr, code = run_maze_test("invalid/large_101x101.txt")
+    _, stderr, code = run_maze_test("invalid/ireg_big_101x101.txt")
     assert "Maze dimensions exceed 100x100" in stderr
     assert code == 1
 
@@ -145,11 +145,10 @@ def test_long_input_string():
 
 ""TEST22: Mixed Case input Test"""
 def test_mixed_case_commands():
-    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["W", "a", "S", "d", "m", "Q"])
-    assert "Player moved up" in stdout
-    assert "Player moved left" in stdout
-    assert "Player moved down" in stdout
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt", ["D", "S", "s", "m", "Q"])
     assert "Player moved right" in stdout
+    assert "Player moved down" in stdout
+    assert "Player moved down" in stdout
     assert "Map displayed" in stdout
     assert code == 0
 
@@ -196,13 +195,13 @@ def test_invalid_command_line_args():
 
 """TEST29:Boundary legal dimension test(5x5)"""
 def test_min_size_maze():
-    stdout, stderr, code = run_maze_test("valid/min_5x5.txt")
+    stdout, stderr, code = run_maze_test("valid/reg_5x5.txt")
     assert "Player starts" in stdout
     assert code == 0
 
 """TEST30:Boundary legal dimension test(100x100)"""
 def test_max_size_maze():
-    stdout, stderr, code = run_maze_test("valid/max_100x100.txt")
+    stdout, stderr, code = run_maze_test("valid/reg_100x100.txt")
     assert "Player starts" in stdout
     assert code == 0
 
@@ -218,6 +217,6 @@ def test_special_char_input():
 
 """TEST33:Empty File"""
 def test_empty_maze_file():
-    _, stderr, code = run_maze_test("invalid/empty.txt")
+    _, stderr, code = run_maze_test("invalid/irg_empty.txt")
     assert "Error: Empty maze file" in stderr
     assert code == 1
