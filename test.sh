@@ -37,6 +37,41 @@ ERROR_CODE_MULTIPLE_EXIT_POINTS = 11
 ERROR_CODE_EMPTY_MAZE_FILE = 12
 ERROR_CODE_INVALID_ARGS = 13
 
+@pytest.fixture(scope="session", autouse=True)
+def check_test_data():
+    """ Global Test Data file Inspection """
+    required_files = [
+        # Valid mazes
+        "valid/reg_5x5.txt",
+        "valid/reg_100x100.txt",
+        "valid/reg_movement_test.txt",
+        "valid/reg_quick_win.txt",
+        "valid/reg_10x6.txt",
+        "valid/reg_15x8.txt",
+        
+        # Invalid mazes
+        "invalid/ireg_missing_S.txt",
+        "invalid/ireg_missing_E.txt",
+        "invalid/ireg_width_5x5.txt",
+        "invalid/ireg_height_5x5.txt",
+        "invalid/ireg_small_4x4.txt",
+        "invalid/ireg_big_101x101.txt",
+        "invalid/ireg_char.txt",
+        "invalid/ireg_multi_S.txt",
+        "invalid/ireg_multi_E.txt",
+        "invalid/ireg_empty.txt",
+        "invalid/ireg_trapped.txt"
+    ]
+    
+    missing = []
+    for file in required_files:
+        full_path = os.path.join(TEST_DATA_DIR, file)
+        if not os.path.exists(full_path):
+            missing.append(full_path)
+    
+    if missing:
+        pytest.fail(f"缺失测试数据文件: {missing}")
+
 """TEST1: Load a valid maze file """
 def test_load_valid_maze():
     stdout, stderr, code = run_maze_test("valid/reg_5x5.txt")
@@ -167,10 +202,17 @@ def test_empty_maze_file():
 """TEST21:Test parameterless"""
 def test_invalid_command_line_args():
     cmd = [MAZE_EXECUTABLE]
-    proc = subprocess.Popen(...)
-    ...
+    proc = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8"
+    )
+    stdout, stderr = proc.communicate()
     assert "Usage:" in stderr
-    assert code == ERROR_CODE_INVALID_ARGS    
+    assert proc.returncode == ERROR_CODE_INVALID_ARGS  
 
 """TEST22: The starting point is surrounded by walls"""
 def test_trapped_start():
@@ -206,7 +248,7 @@ def test_multiple_invalid_inputs():
 """TEST28: Continue typing after victory"""
 def test_commands_after_win():
     inputs = ["D", "D", "S", "W", "A"] 
-    stdout, stderr, code = run_maze_test("valid/quick_win.txt", inputs)
+    stdout, stderr, code = run_maze_test("valid/reg_movement_test.txt", inputs)
     assert "Congratulations" in stdout
     assert "Player moved" not in stdout[-100:] 
 
@@ -217,8 +259,8 @@ def test_mixed_movement_sequence():
     valid_moves = ["right", "down", "left"]
     for move in valid_moves:
         assert f"Player moved {move}" in stdout
-        assert stdout.count("Invalid input") == 3
-        assert "Cannot move into wall" in stdout
+    assert stdout.count("Invalid input") == 3
+    assert "Cannot move into wall" in stdout
 
 """TEST30:Test the uppercase command (M) separately"""
 def test_uppercase_map_command():
